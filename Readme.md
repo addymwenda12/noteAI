@@ -33,9 +33,8 @@ Before you begin, ensure you have the following installed:
    pip install -r requirements.txt
 
 4. Run app
-   
+   ```bash
    streamlit run app.py
-   
 
 ## Supabase Configuration
 
@@ -46,23 +45,45 @@ Before you begin, ensure you have the following installed:
    - Navigate to the **SQL Editor** tab.
    - Run the following SQL command to enable the `pgvector` extension:
 
-     
+     ```sql
      CREATE EXTENSION vector;
      
-
 3. **Create the `documents` table and `pdf_check` function:**
    - In the same SQL Editor, run the following SQL commands:
+  
+     ```sql
+     CREATE TABLE documents (
+        id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+        content text,
+        embedding vector(768)
+      );
 
-     
-     CREATE TABLE documents ( id uuid DEFAULT gen_random_uuid() PRIMARY KEY, content text, embedding vector(768) );
-
-     CREATE OR REPLACE FUNCTION pdf_check( query_embedding vector, notes_value text ) RETURNS TABLE ( id uuid, content text, similarity float ) AS $ BEGIN RETURN QUERY SELECT d.id, d.content, 1 - (d.embedding <=> query_embedding) AS similarity FROM documents d WHERE d.notes = notes_value ORDER BY d.embedding <=> query_embedding LIMIT 10; END; $ LANGUAGE plpgsql;
+      CREATE OR REPLACE FUNCTION pdf_check(
+        query_embedding vector,
+        notes_value text
+     ) RETURNS TABLE (
+        id uuid,
+        content text,
+        similarity float
+      ) AS $$
+     BEGIN
+        RETURN QUERY
+        SELECT
+           d.id,
+           d.content,
+           1 - (d.embedding <=> query_embedding) AS similarity
+        FROM documents d
+        WHERE d.notes = notes_value
+        ORDER BY d.embedding <=> query_embedding
+        LIMIT 10;
+     END;
+     $$ LANGUAGE plpgsql;
      
 
 4. **Get your Supabase URL and API key:**
    - Go to **Project Settings** -> **API** to find your Supabase project URL and API key. You'll need these to connect to your Supabase database from the application.
 
 5. Run app
-   
+   ```bash
    streamlit run app.py
    
